@@ -1,0 +1,56 @@
+{
+  "name": "@foony/chat",
+  "version": "0.0.1",
+  "description": "Chat API (rooms, messages, typing, reactions, presence, occupancy) built on @foony/realtime.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Foony-Limited/chat-js.git"
+  },
+  "keywords": [
+    "foony",
+    "chat",
+    "realtime",
+    "websocket",
+    "typescript"
+  ],
+  "type": "module",
+  "main": "./lib-cjs/index.js",
+  "module": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "sideEffects": false,
+  "files": [
+    "lib-cjs",
+    "lib",
+    "src/**/*.ts",
+    "!src/**/*.test.ts"
+  ],
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.js",
+      "require": "./lib-cjs/index.js",
+      "default": "./lib/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc && tsc -p tsconfig.cjs.json && node ./scripts/write-cjs-package-json.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@foony/realtime": ">=0.0.4"
+  },
+  "devDependencies": {
+    "@foony/realtime": "file:../realtime-js",
+    "@types/node": "^22.13.0",
+    "typescript": "6.0.3",
+    "vitest": "^4.0.14"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
