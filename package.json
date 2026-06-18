@@ -42,7 +42,7 @@
     "access": "public"
   },
   "peerDependencies": {
-    "@foony/realtime": ">=0.0.4"
+    "@foony/realtime": ">=0.2.0"
   },
   "devDependencies": {
     "@foony/realtime": "file:../realtime-js",

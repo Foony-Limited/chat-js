@@ -35,15 +35,15 @@ class FakePresence {
 
 /** Minimal fake Channel: records publishes, echoes them back, lets tests inject frames. */
 class FakeChannel {
-  readonly published: { name: string; data: unknown }[] = [];
+  readonly published: { name: string; data: unknown; ttlMs?: number }[] = [];
   readonly presence = new FakePresence();
   echo = true;
   clientId = 'me';
   private seq = 0;
   private readonly subs = new Map<string, Set<(frame: MessageFrame) => void>>();
 
-  async publish(name: string, data: unknown): Promise<void> {
-    this.published.push({ name, data });
+  async publish(name: string, data: unknown, options?: { ttlMs?: number }): Promise<void> {
+    this.published.push({ name, data, ...(options?.ttlMs === undefined ? {} : { ttlMs: options.ttlMs }) });
     if (this.echo) {
       this.deliver(name, data, this.clientId);
     }
@@ -88,6 +88,8 @@ describe('Messages', () => {
     const sent = await messages.send({ text: 'hello' });
     expect(sent.id).toMatch(/^\d+-[0-9a-f]+$/);
     expect(fake.published[0]).toMatchObject({ name: 'chat.message', data: { action: 'create', id: sent.id, text: 'hello' } });
+    // Chat messages opt into durable retention (~1 year); the edge clamps per plan.
+    expect(fake.published[0]?.ttlMs).toBe(365 * 24 * 60 * 60 * 1000);
     expect(events).toContain('created:hello');
   });
 

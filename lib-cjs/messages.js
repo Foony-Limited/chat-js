@@ -12,6 +12,13 @@ exports.Messages = void 0;
 const protocol_js_1 = require("./protocol.js");
 const reconciler_js_1 = require("./reconciler.js");
 const util_js_1 = require("./util.js");
+/**
+ * Retention requested for chat messages: the maximum the platform offers (1
+ * year). The edge clamps this down to the app's plan ceiling, so a chat message
+ * persists as long as the plan allows — versus typing/reactions, which are left
+ * at the short ephemeral default. One year in milliseconds.
+ */
+const MESSAGE_TTL_MS = 365 * 24 * 60 * 60 * 1000;
 /** The message feature of a {@link Room}. */
 class Messages {
     channel;
@@ -37,7 +44,7 @@ class Messages {
             ...(params.metadata === undefined ? {} : { metadata: params.metadata }),
             ...(params.headers === undefined ? {} : { headers: params.headers }),
         };
-        await this.channel.publish(protocol_js_1.MESSAGE_EVENT, payload);
+        await this.channel.publish(protocol_js_1.MESSAGE_EVENT, payload, { ttlMs: MESSAGE_TTL_MS });
         const now = new Date();
         return {
             id,
@@ -62,12 +69,12 @@ class Messages {
             ...(params.metadata === undefined ? {} : { metadata: params.metadata }),
             ...(params.headers === undefined ? {} : { headers: params.headers }),
         };
-        await this.channel.publish(protocol_js_1.MESSAGE_EVENT, payload);
+        await this.channel.publish(protocol_js_1.MESSAGE_EVENT, payload, { ttlMs: MESSAGE_TTL_MS });
     }
     /** Delete a message by id. */
     async delete(id) {
         const payload = { v: protocol_js_1.PAYLOAD_VERSION, action: 'delete', id };
-        await this.channel.publish(protocol_js_1.MESSAGE_EVENT, payload);
+        await this.channel.publish(protocol_js_1.MESSAGE_EVENT, payload, { ttlMs: MESSAGE_TTL_MS });
     }
     /**
      * Subscribe to live message changes. The first subscriber attaches the
