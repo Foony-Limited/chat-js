@@ -14,8 +14,7 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
-      "@foony/chat": ["../../src/index.ts"],
-      "@foony/realtime": ["../../../realtime-js/src/index.ts"]
+      "@foony/chat": ["../../src/index.ts"]
     }
   },
   "include": ["src"]

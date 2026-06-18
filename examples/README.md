@@ -1,8 +1,9 @@
 # @foony/chat examples
 
-Runnable **client** and **server** examples for the chat SDK, for QA-testing every feature. For
-development convenience these are wired to `../src` (and the local `@foony/realtime` source). For
-real apps, use the published `@foony/chat` package.
+Runnable **client** and **server** examples for the chat SDK, for QA-testing every feature. Only
+`@foony/chat` is wired to local `../src` (so you exercise the latest local chat code); its
+dependencies `@foony/realtime` and `@foony/global-store` are installed from npm like a real
+consumer. For real apps, use the published `@foony/chat` package too.
 
 Both examples authenticate with a **Realtime API key** (`foony.kid_...:sk_...`) and connect to the
 prod edge (`wss://realtime.foony.com`).
@@ -10,9 +11,19 @@ prod edge (`wss://realtime.foony.com`).
 ```
 examples/
   client/        React + Vite browser playground (messages, edits, history, presence, typing, reactions, occupancy)
+    src/store.ts          @foony/global-store: owns the realtime/chat clients, connection + room state
+    src/App.tsx           static shell — reads no store keys, so it never re-renders
+    src/ConnectionPanel,
+        RoomGate,
+        RoomWorkspace.tsx panels that each subscribe (via store.use) to only the slice they need
   server/
     bot.ts       Node chat client: joins a room, subscribes, enters presence, sends heartbeat messages
 ```
+
+The client follows the Foony global-store pattern: a single `createGlobalStore` holds the realtime
+client, chat client, connection state, and joined room. Each panel reads only the keys it needs
+with `store.use(key)`, and `App` reads none — so a message arriving (or the connection log growing)
+re-renders just the relevant leaf panel, never the whole tree.
 
 ## Setup
 
