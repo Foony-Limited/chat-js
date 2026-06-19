@@ -21,7 +21,7 @@ class Rooms {
     get(name, options) {
         let existing = this.byName.get(name);
         if (!existing) {
-            const channel = this.realtime.channels.get((0, protocol_js_1.roomChannelName)(name));
+            const channel = this.realtime.channels.get((0, protocol_js_1.roomChannelName)(name), options?.cipher ? { cipher: options.cipher } : undefined);
             existing = new room_js_1.Room(name, channel, this.getClientId, options);
             this.byName.set(name, existing);
         }

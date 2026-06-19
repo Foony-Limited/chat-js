@@ -16,6 +16,9 @@ export { Typing, type TypingListener } from './typing.js';
 export { Reactions, type ReactionListener } from './reactions.js';
 export { Occupancy, type OccupancyListener } from './occupancy.js';
 export { MessageReconciler } from './reconciler.js';
+// Re-exported for convenience so chat users can set up room encryption without a
+// direct @foony/realtime import.
+export { generateRandomKey, type CipherParams } from '@foony/realtime';
 export type {
   Message,
   MessageAction,

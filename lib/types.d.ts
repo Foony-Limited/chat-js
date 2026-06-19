@@ -5,6 +5,7 @@
  * stable `id` (so edit/delete reference it directly), and presence/typing/
  * reactions/occupancy mirror the concepts without copying Ably's exact names.
  */
+import type { CipherParams } from '@foony/realtime';
 /** Latest action that produced a message's current state. */
 export type MessageAction = 'create' | 'update' | 'delete';
 /**
@@ -121,6 +122,13 @@ export type Occupancy = {
 };
 /** Per-room configuration. */
 export type RoomOptions = {
+    /**
+     * Enable end-to-end encryption for the room. All message, typing, reaction, and
+     * presence payloads are encrypted client-side with this key, so the edge only
+     * sees ciphertext. Share the key between members out of band (e.g.
+     * `generateRandomKey`); never send it to the server.
+     */
+    readonly cipher?: CipherParams;
     /** Typing config. */
     readonly typing?: {
         /**

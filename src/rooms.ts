@@ -22,7 +22,7 @@ export class Rooms {
   get(name: string, options?: RoomOptions): Room {
     let existing = this.byName.get(name);
     if (!existing) {
-      const channel = this.realtime.channels.get(roomChannelName(name));
+      const channel = this.realtime.channels.get(roomChannelName(name), options?.cipher ? { cipher: options.cipher } : undefined);
       existing = new Room(name, channel, this.getClientId, options);
       this.byName.set(name, existing);
     }

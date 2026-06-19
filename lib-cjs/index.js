@@ -8,7 +8,7 @@
  * package (planned as a separate `@foony/chat/react` subpath).
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.MessageReconciler = exports.Occupancy = exports.Reactions = exports.Typing = exports.Presence = exports.Messages = exports.Room = exports.Rooms = exports.ChatClient = void 0;
+exports.generateRandomKey = exports.MessageReconciler = exports.Occupancy = exports.Reactions = exports.Typing = exports.Presence = exports.Messages = exports.Room = exports.Rooms = exports.ChatClient = void 0;
 var chatClient_js_1 = require("./chatClient.js");
 Object.defineProperty(exports, "ChatClient", { enumerable: true, get: function () { return chatClient_js_1.ChatClient; } });
 var rooms_js_1 = require("./rooms.js");
@@ -27,4 +27,8 @@ var occupancy_js_1 = require("./occupancy.js");
 Object.defineProperty(exports, "Occupancy", { enumerable: true, get: function () { return occupancy_js_1.Occupancy; } });
 var reconciler_js_1 = require("./reconciler.js");
 Object.defineProperty(exports, "MessageReconciler", { enumerable: true, get: function () { return reconciler_js_1.MessageReconciler; } });
+// Re-exported for convenience so chat users can set up room encryption without a
+// direct @foony/realtime import.
+var realtime_1 = require("@foony/realtime");
+Object.defineProperty(exports, "generateRandomKey", { enumerable: true, get: function () { return realtime_1.generateRandomKey; } });
 //# sourceMappingURL=index.js.map

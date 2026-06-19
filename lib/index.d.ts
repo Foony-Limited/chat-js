@@ -15,5 +15,6 @@ export { Typing, type TypingListener } from './typing.js';
 export { Reactions, type ReactionListener } from './reactions.js';
 export { Occupancy, type OccupancyListener } from './occupancy.js';
 export { MessageReconciler } from './reconciler.js';
+export { generateRandomKey, type CipherParams } from '@foony/realtime';
 export type { Message, MessageAction, ChatMessageEvent, SendMessageParams, UpdateMessageParams, MessagePage, PresenceMember, PresenceEvent, TypingEvent, RoomReaction, Occupancy as OccupancyData, RoomOptions, } from './types.js';
 //# sourceMappingURL=index.d.ts.map

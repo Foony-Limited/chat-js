@@ -5,9 +5,10 @@
  * occupancy.
  */
 
-import type { Channel, MessageFrame, PresenceEventFrame } from '@foony/realtime';
+import type { Channel, MessageFrame, PresenceEventFrame, Realtime } from '@foony/realtime';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Messages } from './messages.js';
+import { Rooms } from './rooms.js';
 import { Occupancy } from './occupancy.js';
 import { Presence } from './presence.js';
 import { Reactions } from './reactions.js';
@@ -66,6 +67,14 @@ class FakeChannel {
     set.add(listener);
     return () => set!.delete(listener);
   }
+
+  // Stubs so a Room can be constructed around the fake channel.
+  readonly state = 'attached';
+  on(): () => void {
+    return () => {};
+  }
+  async attach(): Promise<void> {}
+  async detach(): Promise<void> {}
 }
 
 /** Build a presence frame for the fake presence facade. */
@@ -104,6 +113,26 @@ describe('Messages', () => {
       { action: 'update', id: sent.id, text: 'edited' },
       { action: 'delete', id: sent.id },
     ]);
+  });
+});
+
+describe('Rooms encryption', () => {
+  it('forwards the room cipher to the underlying channel', () => {
+    const calls: { name: string; options: unknown }[] = [];
+    const realtime = {
+      channels: {
+        get: (name: string, options?: unknown) => {
+          calls.push({ name, options });
+          return fakeChannel().channel;
+        },
+        release: () => {},
+      },
+    } as unknown as Realtime;
+
+    const key = 'A'.repeat(44); // base64-ish placeholder; Rooms just forwards it
+    new Rooms(realtime, () => 'me').get('general', { cipher: { key } });
+
+    expect(calls[0]).toMatchObject({ name: 'chat:general', options: { cipher: { key } } });
   });
 });
 
