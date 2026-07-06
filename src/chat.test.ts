@@ -97,8 +97,8 @@ describe('Messages', () => {
     const sent = await messages.send({ text: 'hello' });
     expect(sent.id).toMatch(/^\d+-[0-9a-f]+$/);
     expect(fake.published[0]).toMatchObject({ name: 'chat.message', data: { action: 'create', id: sent.id, text: 'hello' } });
-    // Chat messages opt into durable retention (~1 year); the edge clamps per plan.
-    expect(fake.published[0]?.ttlMs).toBe(365 * 24 * 60 * 60 * 1000);
+    // Retention comes from the channel's namespace rule, not a per-message TTL.
+    expect(fake.published[0]?.ttlMs).toBeUndefined();
     expect(events).toContain('created:hello');
   });
 

@@ -3,6 +3,20 @@
 All notable changes to `@foony/chat`. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com); versions are semver.
 
+## 0.2.0
+
+### Changed
+
+- **Message retention now comes from the channel's namespace rule** instead of
+  a per-message TTL, which `@foony/realtime` 0.14.0 removed. `send`, `update`,
+  and `delete` behave the same, and messages persist as long as the app's plan
+  and namespace rule allow.
+
+- **Breaking: `messages.history` pages by serial.** `cursor` (and a page's
+  `nextCursor`) is now the oldest message's serial, a number, instead of a
+  message id string. Paging cannot loop or skip when a message id is reused,
+  and deep scrollback is much faster. Requires `@foony/realtime` >= 0.14.0.
+
 ## 0.1.0
 
 ### Added

@@ -70,8 +70,8 @@ export type MessagePage = {
   readonly messages: readonly Message[];
   /** True when older messages remain beyond this page. */
   readonly hasMore: boolean;
-  /** Cursor (oldest message id in the page) to pass back for the next page. */
-  readonly nextCursor?: string;
+  /** Cursor (the page's oldest message serial) to pass back for the next page. */
+  readonly nextCursor?: number;
 };
 
 /** A single presence member in a room. */

@@ -16,14 +16,6 @@ import { newMessageId } from './util.js';
 /** Listener invoked for every materialized message change on the room. */
 export type MessageListener = (event: ChatMessageEvent) => void;
 
-/**
- * Retention requested for chat messages: the maximum the platform offers (1
- * year). The edge clamps this down to the app's plan ceiling, so a chat message
- * persists as long as the plan allows — versus typing/reactions, which are left
- * at the short ephemeral default. One year in milliseconds.
- */
-const MESSAGE_TTL_MS = 365 * 24 * 60 * 60 * 1000;
-
 /** The message feature of a {@link Room}. */
 export class Messages {
   private readonly reconciler: MessageReconciler;
@@ -49,7 +41,7 @@ export class Messages {
       ...(params.metadata === undefined ? {} : { metadata: params.metadata }),
       ...(params.headers === undefined ? {} : { headers: params.headers }),
     };
-    await this.channel.publish(MESSAGE_EVENT, payload, { ttlMs: MESSAGE_TTL_MS });
+    await this.channel.publish(MESSAGE_EVENT, payload);
     const now = new Date();
     return {
       id,
@@ -75,13 +67,13 @@ export class Messages {
       ...(params.metadata === undefined ? {} : { metadata: params.metadata }),
       ...(params.headers === undefined ? {} : { headers: params.headers }),
     };
-    await this.channel.publish(MESSAGE_EVENT, payload, { ttlMs: MESSAGE_TTL_MS });
+    await this.channel.publish(MESSAGE_EVENT, payload);
   }
 
   /** Delete a message by id. */
   async delete(id: string): Promise<void> {
     const payload: MessagePayload = { v: PAYLOAD_VERSION, action: 'delete', id };
-    await this.channel.publish(MESSAGE_EVENT, payload, { ttlMs: MESSAGE_TTL_MS });
+    await this.channel.publish(MESSAGE_EVENT, payload);
   }
 
   /**
@@ -105,10 +97,10 @@ export class Messages {
    * reconciler as the live stream. Pass `cursor` (a previous page's
    * `nextCursor`) to page further back.
    */
-  async history(params?: { limit?: number; cursor?: string }): Promise<MessagePage> {
+  async history(params?: { limit?: number; cursor?: number }): Promise<MessagePage> {
     const { messages: frames, more } = await this.channel.history({
       ...(params?.limit === undefined ? {} : { limit: params.limit }),
-      ...(params?.cursor === undefined ? {} : { start: params.cursor }),
+      ...(params?.cursor === undefined ? {} : { before: params.cursor }),
     });
     const touched: string[] = [];
     for (const frame of frames) {
@@ -127,7 +119,7 @@ export class Messages {
     return {
       messages,
       hasMore: more,
-      ...(frames.length > 0 && frames[0] ? { nextCursor: frames[0].messageId } : {}),
+      ...(frames.length > 0 && frames[0]?.seq !== undefined ? { nextCursor: frames[0].seq } : {}),
     };
   }
 
