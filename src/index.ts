@@ -7,7 +7,8 @@
  * package (planned as a separate `@foony/chat/react` subpath).
  */
 
-export { ChatClient } from './chatClient.js';
+export { ChatClient, type ChatClientOptions } from './chatClient.js';
+export { indexedDbChatStorage, type ChatStorage, type PersistedRoomState } from './storage.js';
 export { Rooms } from './rooms.js';
 export { Room, type RoomStatus, type DiscontinuityListener } from './room.js';
 export { Messages, type MessageListener } from './messages.js';

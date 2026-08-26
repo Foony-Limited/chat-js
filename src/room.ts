@@ -6,6 +6,7 @@
  */
 
 import type { Channel, ChannelStateChange, UnsubscribeFn } from '@foony/realtime';
+import type { ChatStorage } from './storage.js';
 import { Messages } from './messages.js';
 import { Occupancy } from './occupancy.js';
 import { Presence } from './presence.js';
@@ -41,8 +42,9 @@ export class Room {
     private readonly channel: Channel,
     getClientId: () => string | null,
     options?: RoomOptions,
+    storage: ChatStorage | null = null,
   ) {
-    this.messages = new Messages(channel, name, getClientId);
+    this.messages = new Messages(channel, name, getClientId, storage);
     this.presence = new Presence(channel);
     this.typing = new Typing(channel, getClientId, options?.typing?.heartbeatThrottleMs);
     this.reactions = new Reactions(channel, getClientId);

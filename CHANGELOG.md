@@ -3,6 +3,25 @@
 All notable changes to `@foony/chat`. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com); versions are semver.
 
+## 0.3.0
+
+### Added
+
+- **Rooms can persist between page loads.** Pass a storage to the client and a
+  returning visitor renders from their local copy while the server replays only
+  what they missed, so `history()` resolves instantly on repeat visits:
+
+  ```js
+  const chat = new ChatClient(realtime, {
+    storage: indexedDbChatStorage() ?? undefined,
+  });
+  ```
+
+  `indexedDbChatStorage()` keeps the newest 300 messages per room in
+  IndexedDB and returns null where IndexedDB does not exist. If a stored
+  copy is too old to stitch to the live stream, it is dropped and history
+  is fetched fresh. Requires `@foony/realtime` 0.16.0.
+
 ## 0.2.0
 
 ### Changed

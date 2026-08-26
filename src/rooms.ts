@@ -7,6 +7,7 @@
 import type { Realtime } from '@foony/realtime';
 import { roomChannelName } from './protocol.js';
 import { Room } from './room.js';
+import type { ChatStorage } from './storage.js';
 import type { RoomOptions } from './types.js';
 
 /** Factory and cache for {@link Room} instances on a {@link ChatClient}. */
@@ -16,6 +17,7 @@ export class Rooms {
   constructor(
     private readonly realtime: Realtime,
     private readonly getClientId: () => string | null,
+    private readonly storage: ChatStorage | null = null,
   ) {}
 
   /** Get (or create) the room named `name`. Stable instance per name. */
@@ -23,7 +25,7 @@ export class Rooms {
     let existing = this.byName.get(name);
     if (!existing) {
       const channel = this.realtime.channels.get(roomChannelName(name), options?.cipher ? { cipher: options.cipher } : undefined);
-      existing = new Room(name, channel, this.getClientId, options);
+      existing = new Room(name, channel, this.getClientId, options, this.storage);
       this.byName.set(name, existing);
     }
     return existing;
