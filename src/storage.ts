@@ -30,39 +30,64 @@ export type ChatStorage = {
 const STORE = 'rooms';
 
 /**
- * A {@link ChatStorage} backed by IndexedDB, or null where IndexedDB does not exist (Node,
- * some webviews) so callers can pass the result straight to `new ChatClient(...)`.
+ * Create an optional IndexedDB cache. Return null when access is unavailable or blocked.
+ * If opening or using the database fails, reads resolve with null and writes resolve without
+ * saving. Cache failures never reject, so live chat can continue without persistence.
  *
  * @example
  * const chat = new ChatClient(realtime, { storage: indexedDbChatStorage() ?? undefined });
  */
 export function indexedDbChatStorage(dbName = 'foony-chat'): ChatStorage | null {
-  if (typeof indexedDB === 'undefined') {
+  let factory: IDBFactory;
+  try {
+    factory = globalThis.indexedDB;
+    if (!factory) {
+      return null;
+    }
+  } catch {
     return null;
   }
-  const database = openDatabase(dbName);
+  // Attach the rejection handler now, before a room has asked to use the cache.
+  const database = openDatabase(factory, dbName).catch(() => null);
+  let failed = false;
+
+  async function withDatabase<T>(operation: (db: IDBDatabase) => Promise<T>, fallback: T): Promise<T> {
+    const db = await database;
+    if (!db || failed) {
+      return fallback;
+    }
+    try {
+      return await operation(db);
+    } catch {
+      // Quota and privacy failures can persist for the whole session. Stop retrying this cache.
+      failed = true;
+      return fallback;
+    }
+  }
+
   return {
     async load(room: string): Promise<PersistedRoomState | null> {
-      const db = await database;
-      return await requestOf<PersistedRoomState | undefined>(
+      return withDatabase(async db => await requestOf<PersistedRoomState | undefined>(
         db.transaction(STORE, 'readonly').objectStore(STORE).get(room),
-      ) ?? null;
+      ) ?? null, null);
     },
     async save(room: string, state: PersistedRoomState): Promise<void> {
-      const db = await database;
-      await requestOf(db.transaction(STORE, 'readwrite').objectStore(STORE).put(state, room));
+      return withDatabase(async db => {
+        await requestOf(db.transaction(STORE, 'readwrite').objectStore(STORE).put(state, room));
+      }, undefined);
     },
     async remove(room: string): Promise<void> {
-      const db = await database;
-      await requestOf(db.transaction(STORE, 'readwrite').objectStore(STORE).delete(room));
+      return withDatabase(async db => {
+        await requestOf(db.transaction(STORE, 'readwrite').objectStore(STORE).delete(room));
+      }, undefined);
     },
   };
 }
 
 /** Open (or create) the database with its single room store. */
-function openDatabase(dbName: string): Promise<IDBDatabase> {
+function openDatabase(factory: IDBFactory, dbName: string): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(dbName, 1);
+    const request = factory.open(dbName, 1);
     request.onupgradeneeded = () => {
       request.result.createObjectStore(STORE);
     };

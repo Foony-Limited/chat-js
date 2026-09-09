@@ -3,6 +3,12 @@
 All notable changes to `@foony/chat`. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com); versions are semver.
 
+## 0.3.1
+
+### Fixed
+
+- Chat continues without its local cache when browser privacy settings block IndexedDB or the cache runs out of space.
+
 ## 0.3.0
 
 ### Added

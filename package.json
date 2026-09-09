@@ -1,6 +1,6 @@
 {
   "name": "@foony/chat",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Chat API (rooms, messages, typing, reactions, presence, occupancy) built on @foony/realtime.",
   "license": "Apache-2.0",
   "repository": {
