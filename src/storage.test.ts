@@ -24,6 +24,20 @@ function frame(seq: number, text = `m${seq}`): MessageFrame {
   };
 }
 
+/** Member `index` of a batch the server stored as one record with serial `seq`: members share it. */
+function batchMember(seq: number, index: number): MessageFrame {
+  return {
+    t: 'msg',
+    channel: 'chat:room',
+    name: MESSAGE_EVENT,
+    data: { v: PAYLOAD_VERSION, action: 'create', id: `id-${seq}-${index}`, text: `m${seq}-${index}` },
+    timestamp: seq,
+    messageId: `mx-${seq}:${index}`,
+    clientId: 'alice',
+    seq,
+  };
+}
+
 /** In-memory ChatStorage recording every call. */
 class MemoryStorage implements ChatStorage {
   saved = new Map<string, PersistedRoomState>();
@@ -162,6 +176,56 @@ describe('chat persistence', () => {
     expect(saved?.frames.length).toBe(300);
     expect(saved?.frames[0]?.seq).toBe(6);
     expect(saved?.hasMore).toBe(true);
+  });
+
+  it('keeps every message of a batch, which share one seq', async () => {
+    vi.useFakeTimers();
+    const storage = new MemoryStorage({ room: { frames: [], serial: 0, hasMore: false } });
+    const channel = new FakeChannel();
+    const messages = makeMessages(channel, storage);
+    messages.subscribe(() => {});
+    await settle();
+
+    channel.deliver(batchMember(5, 0));
+    channel.deliver(batchMember(5, 1));
+    channel.deliver(frame(6));
+    await vi.runAllTimersAsync();
+    expect(storage.saved.get('room')?.frames.map((stored) => stored.messageId)).toEqual(['mx-5:0', 'mx-5:1', 'mx-6']);
+  });
+
+  it('trims whole batches, so paging back from the oldest stored seq skips nothing', async () => {
+    vi.useFakeTimers();
+    const storage = new MemoryStorage({ room: { frames: [], serial: 0, hasMore: false } });
+    const channel = new FakeChannel();
+    const messages = makeMessages(channel, storage);
+    messages.subscribe(() => {});
+    await settle();
+
+    // 3 batch messages at seq 1, then 298 single messages: one over the cap of 300.
+    for (let index = 0; index < 3; index++) {
+      channel.deliver(batchMember(1, index));
+    }
+    for (let seq = 2; seq <= 299; seq++) {
+      channel.deliver(frame(seq));
+    }
+    await vi.runAllTimersAsync();
+    const saved = storage.saved.get('room');
+    expect(saved?.frames[0]?.seq).toBe(2);
+    expect(saved?.frames.length).toBe(298);
+    expect(saved?.hasMore).toBe(true);
+  });
+
+  it('serves a stored page that holds the whole oldest batch, so its cursor skips nothing', async () => {
+    const storage = new MemoryStorage({
+      room: { frames: [frame(1), batchMember(2, 0), batchMember(2, 1), frame(3)], serial: 3, hasMore: false },
+    });
+    const channel = new FakeChannel();
+    const messages = makeMessages(channel, storage);
+
+    const page = await messages.history({ limit: 2 });
+    expect(page.messages.map((message) => message.text)).toEqual(['m2-0', 'm2-1', 'm3']);
+    expect(page.nextCursor).toBe(2);
+    expect(channel.historyCalls).toHaveLength(0);
   });
 
   it('falls back to the server when the stored window is smaller than the request', async () => {

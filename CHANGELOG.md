@@ -3,6 +3,16 @@
 All notable changes to `@foony/chat`. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com); versions are semver.
 
+## 0.3.2
+
+### Fixed
+
+- **Scrolling back through history works for messages published as a batch.**
+  Before, `history()` stopped after the first page when the oldest message on
+  it came from a batch. Needs `@foony/realtime` 0.16.2 or later.
+- **The room cache keeps every message of a batch.** A cached room could drop
+  all but one message of a batch, and they never came back on the next visit.
+
 ## 0.3.1
 
 ### Fixed

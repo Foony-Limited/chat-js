@@ -255,7 +255,14 @@ export class Messages {
     if (this.frameLog.length === 0 || (this.frameLog.length < limit && this.storedHasMore)) {
       return null;
     }
-    const window = this.frameLog.slice(-limit);
+    let start = Math.max(this.frameLog.length - limit, 0);
+    // Start at the first message of the oldest batch in the window. The messages of a batch share
+    // one seq, and the page's cursor is its oldest seq, so paging back from half a batch would skip
+    // the other half.
+    while (start > 0 && this.frameLog[start - 1]!.seq === this.frameLog[start]!.seq) {
+      start--;
+    }
+    const window = this.frameLog.slice(start);
     const touched: string[] = [];
     for (const frame of window) {
       const id = messageIdOf(frame);
@@ -268,7 +275,7 @@ export class Messages {
       .filter((message): message is Message => message !== undefined);
     return {
       messages,
-      hasMore: this.storedHasMore || this.frameLog.length > window.length,
+      hasMore: this.storedHasMore || start > 0,
       ...(window[0]?.seq === undefined ? {} : { nextCursor: window[0].seq }),
     };
   }
@@ -317,18 +324,28 @@ export class Messages {
     }
   }
 
-  /** Sort, dedupe by seq, and trim the frame log to the newest window. */
+  /**
+   * Sort by seq, drop repeats, and trim the frame log to the newest window. The messages of one
+   * batch share a seq, so a repeat is a frame with the same seq AND message id, and the trim drops
+   * a batch whole: the oldest stored seq is the cursor for paging back, which must not skip half a
+   * batch.
+   */
   private normalizeFrameLog(): void {
     if (this.frameLog.length === 0) {
       return;
     }
-    const bySeq = new Map<number, MessageFrame>();
+    const byKey = new Map<string, MessageFrame>();
     for (const frame of this.frameLog) {
-      bySeq.set(frame.seq!, frame);
+      byKey.set(`${frame.seq}\u0000${frame.messageId}`, frame);
     }
-    const sorted = [...bySeq.values()].sort((left, right) => left.seq! - right.seq!);
+    // A stable sort, so the messages of one batch keep their order.
+    const sorted = [...byKey.values()].sort((left, right) => left.seq! - right.seq!);
     if (sorted.length > PERSIST_MAX_FRAMES) {
-      this.frameLog = sorted.slice(-PERSIST_MAX_FRAMES);
+      let start = sorted.length - PERSIST_MAX_FRAMES;
+      while (start < sorted.length && sorted[start]!.seq === sorted[start - 1]!.seq) {
+        start++;
+      }
+      this.frameLog = sorted.slice(start);
       this.storedHasMore = true;
     } else {
       this.frameLog = sorted;
