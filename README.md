@@ -62,6 +62,20 @@ edge live in [`examples/`](./examples) (`npm run client` for the React playgroun
 - `npm run build` — dual ESM (`lib/`) + CJS (`lib-cjs/`) build.
 - `npm test` — vitest unit tests.
 
+## Releases
+
+Update `package.json`, `package-lock.json`, and `CHANGELOG.md`, then push to `main`.
+The [publish workflow](.github/workflows/publish.yml) builds and tests the SDK,
+then publishes the version if it is not already on npm. Stable versions use the
+`latest` tag. Prerelease versions use `next`.
+
+You can retry a failed release with **Run workflow** on GitHub's Actions page.
+Publishing uses npm's trusted publisher for this repository and `publish.yml`.
+It does not need an npm token in GitHub secrets.
+
+Publish the realtime dependency first. The workflow installs the released version
+recorded under `../realtime-js` in `package-lock.json` before building chat.
+
 ## License
 
 [Apache-2.0](./LICENSE) © Foony Limited
