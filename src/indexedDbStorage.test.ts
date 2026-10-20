@@ -40,6 +40,16 @@ describe('optional IndexedDB storage', () => {
     expect(await storage?.load('room')).toBeNull();
   });
 
+  it('continues without a cache when the database upgrade has no result to make the store in', async () => {
+    const abort = vi.fn();
+    const request: Record<string, any> = {result: undefined, transaction: {abort}};
+    Object.defineProperty(globalThis, 'indexedDB', {configurable: true, value: {open: () => request}});
+    const storage = indexedDbChatStorage();
+    expect(() => request.onupgradeneeded()).not.toThrow();
+    expect(abort).toHaveBeenCalledOnce();
+    expect(await storage?.load('room')).toBeNull();
+  });
+
   it('disables failed persistence while keeping later reads and writes usable', async () => {
     const transaction = vi.fn(() => { throw new DOMException('Quota exceeded', 'QuotaExceededError'); });
     const request: Record<string, any> = {result: {transaction}};

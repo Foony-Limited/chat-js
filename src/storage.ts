@@ -89,7 +89,19 @@ function openDatabase(factory: IDBFactory, dbName: string): Promise<IDBDatabase>
   return new Promise((resolve, reject) => {
     const request = factory.open(dbName, 1);
     request.onupgradeneeded = () => {
-      request.result.createObjectStore(STORE);
+      // Safari 17 on a Mac had no request.result here (2026-10-20), and the throw left this
+      // handler as an uncaught error on the page. The chat then works without a cache. The upgrade
+      // is undone, so the next page load tries again instead of keeping a database with no store.
+      try {
+        request.result.createObjectStore(STORE);
+      } catch (error) {
+        reject(error);
+        try {
+          request.transaction?.abort();
+        } catch {
+          // The upgrade already ended, so there is nothing to undo.
+        }
+      }
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error ?? new Error('indexedDB open failed'));

@@ -3,6 +3,15 @@
 All notable changes to `@foony/chat`. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com); versions are semver.
 
+## 0.3.3
+
+### Fixed
+
+- **No uncaught error when Safari can't set up the room cache.** Safari 17 on a
+  Mac could throw "undefined is not an object (evaluating
+  'i.result.createObjectStore')" while opening the cache. Chat now continues
+  without its local cache, as it does when IndexedDB is blocked.
+
 ## 0.3.2
 
 ### Fixed
